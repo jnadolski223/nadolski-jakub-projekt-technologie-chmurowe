@@ -4,13 +4,12 @@ export default function PageHeader({ username = "" }) {
             <h1>EventApp</h1>
             {username ? (
                 <div className="account-section">
-                    <span>{username}</span>
+                    <button>{username}</button>
                 </div>
             ) : (
                 <div className="account-section">
-                    <span>Log in</span>
-                    <span>/</span>
-                    <span>Register</span>
+                    <button>Log in</button>
+                    <button>Register</button>
                 </div>
             )}
         </div>

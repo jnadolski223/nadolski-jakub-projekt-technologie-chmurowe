@@ -1,0 +1,47 @@
+[
+    {
+        "eventId": 1,
+        "title": "Koncert Rockowy",
+        "organizer": "Live Music Events",
+        "date": "2025-07-10",
+        "time": "19:00",
+        "location": "Hala Widowiskowa, Poznań",
+        "description": "Największy koncert rockowy w mieście! Wystąpią topowe zespoły z Polski i zagranicy. Dołącz do nas na niezapomniany wieczór pełen muzyki."
+    },
+    {
+        "eventId": 2,
+        "title": "Warsztaty Fotograficzne",
+        "organizer": "Stowarzyszenie Fotografów",
+        "date": "2025-06-25",
+        "time": "15:00",
+        "location": "Centrum Kultury, Poznań",
+        "description": "Intensywne warsztaty dla miłośników fotografii. Nauczysz się obsługi aparatu i technik edycji zdjęć. Idealne dla początkujących i zaawansowanych."
+    },
+    {
+        "eventId": 3,
+        "title": "Targi Książki",
+        "organizer": "Fundacja Czytelnictwa",
+        "date": "2025-09-15",
+        "time": "10:00",
+        "location": "MTP Poznań",
+        "description": "Największe targi książki w regionie! Spotkania z autorami, premiery, a także specjalne promocje na książki. Idealne wydarzenie dla miłośników literatury."
+    },
+    {
+        "eventId": 4,
+        "title": "Maraton Poznański",
+        "organizer": "Poznańskie Stowarzyszenie Biegowe",
+        "date": "2025-10-05",
+        "time": "08:00",
+        "location": "Stadion Miejski, Poznań",
+        "description": "Największa impreza biegowa w Poznaniu! Dołącz do tysięcy uczestników i sprawdź swoje możliwości na trasie maratonu."
+    },
+    {
+        "eventId": 5,
+        "title": "Wykład o Sztucznej Inteligencji",
+        "organizer": "Uniwersytet Poznański",
+        "date": "2025-08-20",
+        "time": "17:00",
+        "location": "Aula Uniwersytecka, Poznań",
+        "description": "Eksperci omówią najnowsze osiągnięcia w dziedzinie AI, w tym przyszłość technologii i jej wpływ na różne sektory."
+    }
+]
