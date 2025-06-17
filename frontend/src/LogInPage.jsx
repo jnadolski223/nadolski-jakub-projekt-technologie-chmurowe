@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function LogInPage() {
     const [email, setEmail] = useState("");
@@ -38,6 +39,7 @@ export default function LogInPage() {
 
                     <button type="submit">Log in</button>
                 </form>
+                <p>New to EventApp? <Link to="/register">Register</Link> </p>
             </div>
         </>
     )

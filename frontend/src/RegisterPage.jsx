@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function RegisterPage() {
     const [username, setUsername] = useState("");
@@ -47,9 +48,10 @@ export default function RegisterPage() {
                         />
                     </p>
 
-                    <button type="submit">Log in</button>
+                    <button type="submit">Create account</button>
                 </form>
+                <p>Already registered? <Link to="/login">Log in</Link></p>
             </div>
         </>
-    )
+    );
 };

@@ -1,0 +1,32 @@
+[
+    {
+        "userId": 1,
+        "username": "johndoe",
+        "email": "johndoe@example.com",
+        "password": "hashed_password_123"
+    },
+    {
+        "userId": 2,
+        "username": "ann.kowalska",
+        "email": "ann.kowalska@example.com",
+        "password": "secret_hash456"
+    },
+    {
+        "userId": 3,
+        "username": "mario_85",
+        "email": "mario@example.org",
+        "password": "encrypted_pass789"
+    },
+    {
+        "userId": 4,
+        "username": "techlover",
+        "email": "techlover@mail.com",
+        "password": "hash_qwerty321"
+    },
+    {
+        "userId": 5,
+        "username": "e.wozniak",
+        "email": "ewa.wozniak@example.pl",
+        "password": "supersecretkey"
+    }
+]
