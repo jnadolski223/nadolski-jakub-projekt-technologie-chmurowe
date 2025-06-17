@@ -22,7 +22,11 @@ export default function HomePage() {
 
     return (
         <>
-            <PageHeader />
+            <PageHeader
+                accountEndpoint="/account"
+                loginEndpoint="/login"
+                registerEndpoint="/register"
+            />
             <h1>Home Page</h1>
             <p>Page under construction</p>
             <hr />
