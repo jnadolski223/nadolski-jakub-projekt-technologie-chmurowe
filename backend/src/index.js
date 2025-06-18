@@ -186,8 +186,12 @@ app.post("/events", async (req, res) => {
     if (!validator.isDate(date, { format: "YYYY-MM-DD", strictMode: true })) return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD" });
     if (!validator.matches(time, timeFormatRegex)) return res.status(400).json({ message: "Invalid time format. Use HH:mm (24h)" });
 
-    // Inserting event's data into database
     try {
+        // Checking if user exists
+        const result = await pool.query("SELECT * FROM accounts WHERE userId = $1", [userId]);
+        if (result.rows.length === 0) return res.status(404).json({ message: "User not found" });
+
+        // Inserting event's data into database
         const eventId = uuidv4();
         const newEvent = new Event({ eventId, userId, title, location, date, time, description });
         await newEvent.save();
@@ -312,8 +316,11 @@ app.post("/assignments/:eventId/:userId", async (req, res) => {
 
     try {
         // Checking if event exists
-        const eventExists = await Event.exists({ eventId });
-        if (!eventExists) return res.status(404).json({ message: "Event not found" });
+        const event = await Event.findOne({ eventId });
+        if (!event) return res.status(404).json({ message: "Event not found" });
+
+        // Checking if user is the owner
+        if (event.userId === userId) return res.status(400).json({ message: "User cannot assign to their own event" });
 
         // Checking if user is already assigned to the event
         const alreadyAssigned = await Assignment.findOne({ eventId, userId });
