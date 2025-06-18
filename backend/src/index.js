@@ -1,10 +1,14 @@
-import express from "express";
-import { Pool } from "pg";
-import mongoose from "mongoose";
-import { v4 as uuidv4 } from "uuid";
-import bcrypt from "bcrypt";
-import validator from "validator";
-import dotenv from "dotenv";
+const express = require("express");
+const session = require("express-session");
+const { RedisStore } = require("connect-redis");
+const Redis = require("ioredis");
+const { Pool } = require("pg");
+const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
+const dotenv = require("dotenv");
+const cors = require("cors");
 dotenv.config();
 
 const timeFormatRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -32,7 +36,6 @@ const eventSchema = new mongoose.Schema({
     time: { type: String, required: true },
     description: { type: String }
 });
-
 const Event = mongoose.model("Event", eventSchema);
 
 const assignmentSchema = new mongoose.Schema({
@@ -40,12 +43,36 @@ const assignmentSchema = new mongoose.Schema({
     eventId: { type: String, required: true },
     userId: { type: String, required: true }
 });
-
 const Assignment = mongoose.model("Assignment", assignmentSchema);
+
+const redisClient = new Redis({ host: "localhost", port: 6379 });
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
+app.use(session({
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    cookie: {
+        maxAge: 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false
+    }
+}));
+
 app.listen(process.env.PORT, () => console.log(`App backend listening on port ${process.env.PORT}`));
+
+const requireLogin = (req, res, next) => {
+    if (!req.session.userId) return res.status(401).json({ message: "Not authenticated" });
+    next();
+};
 
 // Creating a new user account
 app.post("/accounts", async (req, res) => {
@@ -78,8 +105,8 @@ app.post("/accounts", async (req, res) => {
 });
 
 // Getting user's data
-app.get("/accounts/:userId", async (req, res) => {
-    const userId = req.params.userId;
+app.get("/accounts/me", requireLogin, async (req, res) => {
+    const userId = req.session.userId;
 
     try {
         // Checking if user exists
@@ -96,8 +123,8 @@ app.get("/accounts/:userId", async (req, res) => {
 });
 
 // Updating user's data
-app.patch("/accounts/:userId", async (req, res) => {
-    const userId = req.params.userId;
+app.patch("/accounts/me", requireLogin, async (req, res) => {
+    const userId = req.session.userId;
     const { newUsername, newEmail, currentPassword, newPassword } = req.body;
 
     try {
@@ -154,8 +181,8 @@ app.patch("/accounts/:userId", async (req, res) => {
 });
 
 // Deleting user's account
-app.delete("/accounts/:userId", async (req, res) => {
-    const userId = req.params.userId;
+app.delete("/accounts/me", requireLogin, async (req, res) => {
+    const userId = req.session.userId;
     const { password } = req.body;
 
     try {
@@ -178,11 +205,11 @@ app.delete("/accounts/:userId", async (req, res) => {
 });
 
 // Creating a new event
-app.post("/events", async (req, res) => {
-    const { userId, title, location, date, time, description } = req.body;
+app.post("/events", requireLogin, async (req, res) => {
+    const { title, location, date, time, description } = req.body;
 
     // Validation of parameters
-    if (!userId || !title || !location || !date || !time || !description) return res.status(400).json({ message: "Missing required fields" });
+    if (!title || !location || !date || !time || !description) return res.status(400).json({ message: "Missing required fields" });
     if (!validator.isDate(date, { format: "YYYY-MM-DD", strictMode: true })) return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD" });
     if (!validator.matches(time, timeFormatRegex)) return res.status(400).json({ message: "Invalid time format. Use HH:mm (24h)" });
 
@@ -193,7 +220,7 @@ app.post("/events", async (req, res) => {
 
         // Inserting event's data into database
         const eventId = uuidv4();
-        const newEvent = new Event({ eventId, userId, title, location, date, time, description });
+        const newEvent = new Event({ eventId, userId: req.session.userId, title, location, date, time, description });
         await newEvent.save();
         res.status(201).json({ message: "Created new event" });
     } catch (err) {
@@ -236,7 +263,7 @@ app.get("/events", async (req, res) => {
 });
 
 // Updating event's data
-app.patch("/events/:eventId", async (req, res) => {
+app.patch("/events/:eventId", requireLogin, async (req, res) => {
     const eventId = req.params.eventId;
     const { title, location, date, time, description } = req.body;
 
@@ -265,7 +292,7 @@ app.patch("/events/:eventId", async (req, res) => {
 });
 
 // Deleting event and its assignments
-app.delete("/events/:eventId", async (req, res) => {
+app.delete("/events/:eventId", requireLogin, async (req, res) => {
     const eventId = req.params.eventId;
 
     try {
@@ -282,8 +309,8 @@ app.delete("/events/:eventId", async (req, res) => {
 });
 
 // Getting events owned by user
-app.get("/events/owned/:userId", async (req, res) => {
-    const userId = req.params.userId;
+app.get("/events/owned/me", requireLogin, async (req, res) => {
+    const userId = req.session.userId;
 
     try {
         const events = await Event.find({ userId }).sort({ date: 1, time: 1 });
@@ -294,8 +321,8 @@ app.get("/events/owned/:userId", async (req, res) => {
 });
 
 // Getting events assigned to user
-app.get("/events/signed/:userId", async (req, res) => {
-    const userId = req.params.userId;
+app.get("/events/signed/me", requireLogin, async (req, res) => {
+    const userId = req.session.userId;
 
     try {
         // Returning empty array if user has no assignments
@@ -311,8 +338,9 @@ app.get("/events/signed/:userId", async (req, res) => {
 });
 
 // Assigning user to event
-app.post("/assignments/:eventId/:userId", async (req, res) => {
-    const { eventId, userId } = req.params;
+app.post("/assignments/:eventId/me", requireLogin, async (req, res) => {
+    const eventId = req.params.eventId;
+    const userId = req.session.userId;
 
     try {
         // Checking if event exists
@@ -336,8 +364,9 @@ app.post("/assignments/:eventId/:userId", async (req, res) => {
 });
 
 // Unassigning user from event
-app.delete("/assignments/:eventId/:userId", async (req, res) => {
-    const { eventId, userId } = req.params;
+app.delete("/assignments/:eventId/me", requireLogin, async (req, res) => {
+    const eventId = req.params.eventId;
+    const userId = req.session.userId;
 
     try {
         // Checking if assignment exists
@@ -348,4 +377,33 @@ app.delete("/assignments/:eventId/:userId", async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     };
+});
+
+// Logging in and creating a session
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const result = await pool.query(
+            "SELECT * FROM accounts WHERE username = $1 AND password = $2",
+            [username, password]
+        );
+
+        const user = result.rows[0];
+        if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+        req.session.userId = user.userId;
+        res.status(200).json({ message: "User logged in" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    };
+});
+
+// Logging out and destroying session
+app.post("/logout", requireLogin, (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.clearCookie("connect.sid");
+        res.status(200).json({ message: "User logged out" });
+    });
 });
